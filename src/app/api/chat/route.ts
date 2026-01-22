@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     }
 
     const result = await streamText({
-      model: deepseek('deepseek-chat'),
+      model: deepseek('deepseek-chat') as any,
       messages,
       system: '你是一个生活在 "PM Nexus"（一个个人知识工作台）中的智能 AI 助手。你帮助用户整理思绪、总结内容，并提供关于产品管理和技术的见解。请务必使用中文回复，保持简洁、专业且乐于助人。',
     });
