@@ -1,5 +1,4 @@
 import { Client } from "@notionhq/client";
-import { unstable_cache } from "next/cache";
 
 // Initialize Notion Client
 const notion = new Client({
@@ -7,7 +6,7 @@ const notion = new Client({
 });
 
 export const NOTION_DATABASE_ID = process.env.NOTION_DATABASE_ID;
-export const isNotionConnected = () => !!(process.env.NOTION_API_KEY && process.env.NOTION_DATABASE_ID);
+export const isNotionConnected = !!(process.env.NOTION_API_KEY && NOTION_DATABASE_ID);
 
 export interface NotionPage {
   id: string;
@@ -21,69 +20,71 @@ export interface NotionPage {
 }
 
 /**
- * Fetch pages from the Notion database with caching.
- * Revalidates every 60 seconds.
+ * Fetch pages from the Notion database.
+ * Filters for 'Public' pages by default unless specified otherwise.
  */
-export const getNotionPages = unstable_cache(
-  async (): Promise<NotionPage[]> => {
-    const databaseId = process.env.NOTION_DATABASE_ID;
-    console.log("Fetching Notion pages from API...");
+export async function getNotionPages(): Promise<NotionPage[]> {
+  console.log("Attempting to fetch Notion pages...");
+  console.log("API Key present:", !!process.env.NOTION_API_KEY);
+  console.log("Database ID:", NOTION_DATABASE_ID);
 
-    if (!process.env.NOTION_API_KEY || !databaseId) {
-      console.warn("Notion credentials not found. Returning sample data.");
-      return getSampleData();
-    }
+  if (!process.env.NOTION_API_KEY || !NOTION_DATABASE_ID) {
+    console.warn("Notion credentials not found. Returning sample data.");
+    return getSampleData();
+  }
 
-    try {
-      const response = await notion.databases.query({
-        database_id: databaseId,
-        filter: {
-          property: "Status",
-          select: {
-            equals: "Public",
-          },
+  try {
+    const response = await notion.databases.query({
+      database_id: NOTION_DATABASE_ID,
+      filter: {
+        property: "Status",
+        select: {
+          equals: "Public",
         },
-        sorts: [
-          {
-            property: "Date",
-            direction: "descending",
-          },
-        ],
-      });
+      },
+      sorts: [
+        {
+          property: "Date",
+          direction: "descending",
+        },
+      ],
+    });
+    
+    console.log("Notion API Response success. Items:", response.results.length);
+
+    return response.results.map((page: any) => {
+      const props = page.properties;
       
-      return response.results.map((page: any) => {
-        const props = page.properties;
-        try {
-            const title = props.Name?.title?.[0]?.plain_text || "Untitled";
-            const type = props.Type?.select?.name || "Note";
-            const date = props.Date?.date?.start || new Date().toISOString();
-            const status = props.Status?.select?.name || "Private";
-            const tags = props.Tags?.multi_select?.map((tag: any) => tag.name) || [];
-            const excerpt = props.Excerpt?.rich_text?.[0]?.plain_text || "";
-            
-            return {
-              id: page.id,
-              title,
-              type,
-              date,
-              status,
-              excerpt,
-              tags,
-              url: page.url,
-            };
-        } catch (err) {
-            console.error("Error parsing Notion page:", page.id, err);
-            return null;
-        }
-      }).filter((item): item is NotionPage => item !== null);
-    } catch (error) {
-      console.error("Failed to fetch Notion pages:", error);
-      return getSampleData();
-    }
-  },
-  ['notion-pages'],
-  { revalidate: 60, tags: ['notion'] }
-);
+      // Helper to safely extract property values based on assumptions about DB structure
+      // Log parsing errors but don't crash the whole request
+      try {
+          const title = props.Name?.title?.[0]?.plain_text || "Untitled";
+          const type = props.Type?.select?.name || "Note";
+          const date = props.Date?.date?.start || new Date().toISOString();
+          const status = props.Status?.select?.name || "Private";
+          const tags = props.Tags?.multi_select?.map((tag: any) => tag.name) || [];
+          const excerpt = props.Excerpt?.rich_text?.[0]?.plain_text || "";
+          
+          return {
+            id: page.id,
+            title,
+            type,
+            date,
+            status,
+            excerpt,
+            tags,
+            url: page.url,
+          };
+      } catch (err) {
+          console.error("Error parsing Notion page:", page.id, err);
+          return null;
+      }
+    }).filter(Boolean) as NotionPage[];
+  } catch (error) {
+    console.error("Failed to fetch Notion pages:", error);
+    return getSampleData();
+  }
+}
 
 function getSampleData(): NotionPage[] {
   return [

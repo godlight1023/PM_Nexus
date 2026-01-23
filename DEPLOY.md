@@ -36,48 +36,6 @@ PM Nexus 是基于 Next.js 构建的，部署到 [Vercel](https://vercel.com) �
 5.  **完成**：
     *   等待约 1-2 分钟，部署完成后，你将获得一个生产环境的 URL (例如 `pm-nexus.vercel.app`)。
 
-## 🇨🇳 国内网络访问优化指南
-
-由于 `vercel.app` 域名在中国大陆地区访问不稳定（经常无法连接），如果你需要国内网络流畅访问，推荐以下几种方案：
-
-### 方案一：绑定自定义域名（推荐 👍）
-这是最简单且成本最低的方法。
-1.  **购买域名**：在阿里云、腾讯云或 NameSilo 等平台购买一个个人域名（例如 `yourname.com`）。
-2.  **绑定 Vercel**：
-    *   在 Vercel 项目设置中找到 **Domains**。
-    *   输入你的域名并点击 Add。
-    *   根据提示在你的域名 DNS 提供商处添加 CNAME 记录（指向 `cname.vercel-dns.com`）。
-3.  **效果**：自定义域名通常可以绕过 `vercel.app` 的屏蔽，实现国内直连访问。
-
-### 方案二：使用 Zeabur 部署（国内友好 🚀）
-[Zeabur](https://zeabur.com) 是一个对国内开发者非常友好的部署平台，服务器节点通常位于香港或新加坡，访问速度快。
-1.  登录 Zeabur 并连接 GitHub。
-2.  导入 `PM_Nexus` 仓库。
-3.  在“变量”设置中填入环境变量（同 Vercel）。
-4.  Zeabur 会自动识别 Next.js 并完成部署。
-5.  它提供的免费域名后缀 `zeabur.app` 目前在国内访问较稳定。
-
-### 方案三：Docker 部署到国内服务器（最稳定 🛡️）
-如果你有阿里云、腾讯云等国内云服务器，可以使用 Docker 进行私有化部署。我们已经为你准备好了 `Dockerfile`。
-
-1.  **在服务器上安装 Docker**。
-2.  **拉取代码并构建镜像**：
-    ```bash
-    docker build -t pm-nexus .
-    ```
-3.  **运行容器**（注意替换环境变量）：
-    ```bash
-    docker run -d -p 3000:3000 \
-      -e NOTION_API_KEY="你的key" \
-      -e NOTION_DATABASE_ID="你的id" \
-      -e DEEPSEEK_API_KEY="你的key" \
-      --name pm-nexus \
-      pm-nexus
-    ```
-4.  **访问**：通过 `http://服务器IP:3000` 访问，或配置 Nginx 反向代理绑定域名。
-
----
-
 ## 常见问题
 
 ### 1. Build 失败？

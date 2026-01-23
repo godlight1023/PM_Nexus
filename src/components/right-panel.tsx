@@ -1,7 +1,7 @@
 'use client';
 
 import { Sparkles, Command, ArrowUp, Loader2, Bot, User, Trash2, RefreshCw } from "lucide-react";
-import { useChat } from 'ai/react';
+import { useChat } from '@ai-sdk/react';
 import { useRef, useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
